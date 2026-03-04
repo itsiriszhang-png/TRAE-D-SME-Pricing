@@ -148,7 +148,7 @@ code {
 }
 
 div[data-testid="stMetricValue"] {
-    font-size: 2.5rem;
+    font-size: 2.0rem;
 }
 </style>
 """,
@@ -264,6 +264,7 @@ with c3:
 with c4:
     st.markdown('<div class="kpi">Pricing</div>', unsafe_allow_html=True)
     st.metric("Pricing", pricing["base_rate_str"], label_visibility="collapsed")
+    st.caption(f"Full: {pricing['base_rate_str']}")
 with c5:
     st.markdown('<div class="kpi">Manual Review</div>', unsafe_allow_html=True)
     st.metric("Manual Review", "Yes" if pricing["need_manual_review"] else "No", label_visibility="collapsed")
@@ -275,6 +276,19 @@ st.markdown(
     ),
     unsafe_allow_html=True,
 )
+
+with st.expander("PRD Alignment (Scoring -> Pricing Matrix)", expanded=False):
+    base_score = result.get("base_score", score)
+    penalties = result.get("penalties", [])
+    st.markdown(f"- Base Score (from derived features): `{base_score:.1f}`")
+    if penalties:
+        for p in penalties:
+            st.markdown(f"- Penalty: `{p['name']}` => `{p['delta']}`")
+    else:
+        st.markdown("- Penalty: `None`")
+    st.markdown(f"- Final Score: `{score:.1f}`")
+    st.markdown("- Pricing Matrix: `A>=90`, `B=80-89`, `C=65-79`, `D<65`")
+    st.markdown("- Limit Bands: `A 8-12M`, `B 4-8M`, `C 1-4M`, `D <=2.5M`")
 
 left, right = st.columns([1.15, 1])
 

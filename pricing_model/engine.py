@@ -18,9 +18,6 @@ def compute_pricing(
     data_freshness_days: int = 0,
 ) -> PricingResult:
     """Map risk score to grade, pricing spread, and credit limit recommendation."""
-    if data_freshness_days > 30:
-        score = max(0, score - 5.0)
-
     if score >= 90:
         risk_grade, base_spread = "A", 1.5
         floor_limit, cap_limit = 8_000_000, 12_000_000

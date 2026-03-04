@@ -52,18 +52,21 @@ def run_trae_for_sme(sme_id: str, scenario: str) -> dict:
     if not features:
         return {"error": f"SME {sme_id} not found"}
 
-    score = calculate_score(features)
-
-    if "HighRisk" in sme_id:
-        score = min(score, 58.0)
-    elif "Standard" in sme_id:
-        score = max(score, 85.0)
+    base_score = calculate_score(features)
+    score = base_score
+    penalties = []
 
     scenario_text = (scenario or "").lower()
     if "compliance risk" in scenario_text:
         score -= 15.0
+        penalties.append({"name": "Compliance Risk Scenario", "delta": -15.0})
     elif "liquidity stress" in scenario_text:
         score -= 5.0
+        penalties.append({"name": "Liquidity Stress Scenario", "delta": -5.0})
+
+    if features.get("data_freshness_days", 0) > 30:
+        score -= 5.0
+        penalties.append({"name": "Stale Data Penalty (>30d)", "delta": -5.0})
 
     score = max(0, min(100, score))
 
@@ -84,7 +87,9 @@ def run_trae_for_sme(sme_id: str, scenario: str) -> dict:
     return {
         "sme_id": sme_id,
         "scenario": scenario,
+        "base_score": base_score,
         "score": score,
+        "penalties": penalties,
         "pricing": asdict(pricing_result),
         "explanation": {
             "narrative": explanation_result.narrative,
