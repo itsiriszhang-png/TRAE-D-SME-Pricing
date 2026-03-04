@@ -146,6 +146,10 @@ code {
 .stButton > button:hover {
     filter: brightness(1.06);
 }
+
+div[data-testid="stMetricValue"] {
+    font-size: 2.5rem;
+}
 </style>
 """,
     unsafe_allow_html=True,
@@ -255,13 +259,15 @@ with c2:
     st.metric("Risk Grade", pricing["risk_grade"], label_visibility="collapsed")
 with c3:
     st.markdown('<div class="kpi">Credit Limit</div>', unsafe_allow_html=True)
-    st.metric("Credit Limit", f"${pricing['credit_limit']:,.0f}", label_visibility="collapsed")
+    st.metric("Credit Limit", f"${pricing['credit_limit']/1_000_000:.1f}M", label_visibility="collapsed")
+    st.caption(f"Full: ${pricing['credit_limit']:,.0f}")
 with c4:
     st.markdown('<div class="kpi">Pricing</div>', unsafe_allow_html=True)
     st.metric("Pricing", pricing["base_rate_str"], label_visibility="collapsed")
 with c5:
     st.markdown('<div class="kpi">Manual Review</div>', unsafe_allow_html=True)
-    st.metric("Manual Review", "Required" if pricing["need_manual_review"] else "Not Required", label_visibility="collapsed")
+    st.metric("Manual Review", "Yes" if pricing["need_manual_review"] else "No", label_visibility="collapsed")
+    st.caption("Yes = Analyst Review Gate")
 
 st.markdown(
     '<span class="caption-chip">Profile: {}</span><span class="caption-chip">Scenario: {}</span><span class="caption-chip">Macro: {:.2f}x</span>'.format(
@@ -314,9 +320,9 @@ with left:
     )
     radar.update_layout(
         showlegend=False,
-        polar={"radialaxis": {"visible": True, "range": [0, 1]}},
+        polar={"radialaxis": {"visible": True, "range": [0, 1]}, "angularaxis": {"tickfont": {"size": 13}}},
         height=320,
-        margin=dict(l=20, r=20, t=10, b=10),
+        margin=dict(l=40, r=40, t=20, b=30),
     )
     st.plotly_chart(radar, use_container_width=True)
     st.markdown("</div>", unsafe_allow_html=True)
@@ -349,7 +355,7 @@ with right:
     st.dataframe(df_features, use_container_width=True, hide_index=True, height=240)
     st.markdown("</div>", unsafe_allow_html=True)
 
-tab1, tab2, tab3 = st.tabs(["Explainability", "Audit Log", "Run History"])
+tab1, tab2, tab3, tab4 = st.tabs(["Explainability", "CDI Data Trace", "Audit Log", "Run History"])
 
 with tab1:
     st.markdown("<div class='section'>", unsafe_allow_html=True)
@@ -376,11 +382,30 @@ with tab1:
 
 with tab2:
     st.markdown("<div class='section'>", unsafe_allow_html=True)
+    st.subheader("CDI Source Data and Feature Lineage")
+    st.caption("This section shows how bank flow, e-commerce flow, customs/tax and logistics signals are transformed into risk features.")
+
+    source_data = result.get("cdi_sources", {})
+    lineage = result.get("feature_lineage", [])
+
+    if source_data:
+        for source_name, source_metrics in source_data.items():
+            st.markdown(f"**{source_name}**")
+            source_df = pd.DataFrame([{"metric": k, "value": v} for k, v in source_metrics.items()])
+            st.dataframe(source_df, use_container_width=True, hide_index=True, height=140)
+
+    if lineage:
+        st.markdown("**Derived Feature Mapping**")
+        st.dataframe(pd.DataFrame(lineage), use_container_width=True, hide_index=True, height=220)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+with tab3:
+    st.markdown("<div class='section'>", unsafe_allow_html=True)
     st.subheader("Regulatory Audit Payload")
     st.json(result.get("explanation", {}).get("audit_payload", {}))
     st.markdown("</div>", unsafe_allow_html=True)
 
-with tab3:
+with tab4:
     st.markdown("<div class='section'>", unsafe_allow_html=True)
     st.subheader("Scenario Run History")
     history = pd.DataFrame(st.session_state.history)

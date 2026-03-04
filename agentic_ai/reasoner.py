@@ -7,7 +7,7 @@ project_root = os.path.dirname(current_dir)
 if project_root not in sys.path:
     sys.path.append(project_root)
 
-from data_pipeline.loader import load_sme_features
+from data_pipeline.loader import load_sme_payload
 from explainability.shap_explainer import get_explanations
 from pricing_model.engine import compute_pricing
 
@@ -47,7 +47,8 @@ def calculate_score(features: dict) -> float:
 
 def run_trae_for_sme(sme_id: str, scenario: str) -> dict:
     """Run Transform -> Reason -> Act -> Explain for one SME."""
-    features = load_sme_features(sme_id)
+    payload = load_sme_payload(sme_id)
+    features = payload.get("features", {})
     if not features:
         return {"error": f"SME {sme_id} not found"}
 
@@ -91,6 +92,14 @@ def run_trae_for_sme(sme_id: str, scenario: str) -> dict:
             "audit_payload": explanation_result.audit_payload,
         },
         "features": features,
+        "cdi_sources": payload.get("cdi_sources", {}),
+        "feature_lineage": [
+            {"derived_feature": "gmv_growth", "source_domain": "Ecommerce_Transactions", "source_fields": "gmv_30d_usd, order_count_30d"},
+            {"derived_feature": "refund_rate", "source_domain": "Ecommerce_Transactions", "source_fields": "refund_ratio_30d, chargeback_ratio_30d"},
+            {"derived_feature": "collection_period", "source_domain": "IADS_BankFlow", "source_fields": "avg_monthly_inflow_usd, avg_monthly_outflow_usd, overdue_days_90d"},
+            {"derived_feature": "customs_alignment_score", "source_domain": "CDI_CDEG_CustomsTax", "source_fields": "customs_declaration_pass_rate, tax_filing_ontime_rate, customs_anomaly_count_90d"},
+            {"derived_feature": "data_freshness_days", "source_domain": "CDI Metadata", "source_fields": "ingestion_timestamp"},
+        ],
     }
 
 
