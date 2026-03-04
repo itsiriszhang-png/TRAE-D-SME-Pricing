@@ -1,97 +1,156 @@
-# 产品需求文档 (PRD): TRAE-D-SME-Pricing 跨境中小企业智能风险定价引擎
+﻿# 产品需求文档 (PRD): TRAE-D-SME-Pricing 跨境中小企业智能风险定价引擎
 
 | 版本 | 日期 | 作者 | 更新内容 | 状态 |
 | :--- | :--- | :--- | :--- | :--- |
-| v1.0 | 2026-02-20 | TRAE Assistant | 初始版本 (MVP) | 已发布 |
+| v1.2 | 2026-03-04 | Yixin Zhang | 面试版重构：统一阈值、量化验收、明确实现边界 | Interview Edition |
+
+---
+
+## 0. 实现边界说明（面试必读）
+
+为避免“概念大于落地”，本项目按以下边界展示：
+
+- Implemented（已实现于 Demo）
+  - 多源数据模拟接入（CDI理念映射）
+  - 动态评分（0-100）与分级定价（A-D）
+  - 数据新鲜度惩罚、人工复核触发
+  - 可解释输出（原因码 + 自然语言摘要）
+  - Streamlit可视化与审计日志展示
+- Simulated（模拟实现）
+  - mBridge 结算路径推荐与可视化
+  - ISO 20022-compatible 审计字段映射
+- Planned（规划项，未在本版实现）
+  - 银行真实生产数据联调
+  - HKMA FSS正式试点接入
+  - MPC生产级隐私计算框架
 
 ---
 
 ## 1. 功能背景 (Context)
 
 ### 1.1 问题陈述
-香港作为国际金融中心，众多跨境中小企业（SME）面临“融资难、融资贵”的痛点。传统银行依赖财务报表和抵押品进行信贷评估，而跨境电商等新兴 SME 往往缺乏这些传统资产，但拥有丰富的流水和海关数据。银行缺乏有效的手段将这些“替代数据”转化为可信的风险评估。
+香港跨境 SME 常见“融资难、融资贵”问题。传统授信更依赖财务报表和抵押资产，而跨境电商类 SME 往往有高质量交易与物流行为数据，但难以被传统模型充分利用。
 
 ### 1.2 目标与价值
-构建一套基于 **HKMA CDI (商业数据通)** 理念的智能风险定价引擎，利用 **TRAE (Transform-Reason-Act-Explain)** 框架，实现：
-1.  **数据驱动授信**：整合海关、电商、支付流等多源数据，替代传统财报。
-2.  **动态精准定价**：根据实时风险场景（如回款延迟、合规度）动态调整利率和额度。
-3.  **合规可解释性**：提供符合 HKMA GenAI Sandbox 要求的模型解释（XAI）和 ISO 20022 审计日志。
-4.  **原子结算能力**：针对优质客户，通过 mBridge (DLT) 实现资金实时跨境结算。
+构建基于 HKMA CDI 思路的智能风险定价引擎，实现：
+1. 数据驱动授信：用替代数据增强信用识别。
+2. 动态精准定价：根据风险变化调整额度和利率。
+3. 合规可解释：输出可追溯决策依据与审计记录。
+4. 风险闭环迭代：支持策略复盘与阈值优化。
 
 ---
 
 ## 2. 用户场景 (User Scenarios)
 
-### 场景一：优质电商企业的快速获批
-*   **用户**：一家在深圳运营、通过香港收款的成熟跨境电商（类似 `GBA_Eco_Standard`）。
-*   **情境**：企业近期海关申报规范，流水稳定增长，急需资金备货旺季。
-*   **流程**：RM（客户经理）在系统输入 SME ID -> 系统拉取 CDI 数据 -> **Reasoning** 引擎判定为 Grade A -> **Act** 引擎自动批核 800万额度，利率 Prime+1.5% -> **Explain** 模块提示“海关一致性高” -> 系统推荐走 **mBridge** 结算通道。
+### 场景一：优质跨境商户快速获批
+- 用户：成熟跨境电商（如 `GBA_Eco_Standard`）
+- 情境：海关申报稳定、流水增长，旺季前需备货资金
+- 结果：系统评为 Grade A，建议高额度、低加点定价，并推荐低摩擦结算路径
 
-### 场景二：异常交易的风控拦截
-*   **用户**：一家新注册的贸易公司（类似 `GBA_Eco_HighRisk`）。
-*   **情境**：交易量突然翻倍，但回款周期拉长至 85 天。
-*   **流程**：系统检测到“GMV 激增”但“数据滞后 45 天” -> **Reasoning** 引擎扣除新鲜度分数 -> **Act** 引擎降级为 Grade C，触发“人工复核” -> **Explain** 模块警示“数据陈旧且回款异常” -> 系统拒绝自动放款，建议走 SWIFT gpi 并加强尽职调查。
+### 场景二：异常交易触发风控收敛
+- 用户：新注册商户（如 `GBA_Eco_HighRisk`）
+- 情境：交易突增且回款周期显著拉长，数据新鲜度不足
+- 结果：系统触发惩罚与降级，进入人工复核，不自动放款
 
 ---
 
 ## 3. 需求描述 (Functional Requirements)
 
-### 3.1 数据转换层 (Transform)
-*   **R-001 多源数据接入**：系统需支持从模拟的 CDI 接口接入数据，包括：
-    *   IADS (银行间账户数据)：流水、余额。
-    *   CDI-CDEG (海关数据)：报关单量、退税率。
-*   **R-002 特征工程**：自动计算关键风控指标，包括 `gmv_growth` (GMV增长率), `refund_rate` (退款率), `collection_period` (回款周期), `customs_alignment_score` (海关一致性)。
-*   **R-003 数据新鲜度校验**：系统需检查数据时间戳，若 `data_freshness_days > 30`，自动标记为“Stale Data”。
+### 3.1 Transform（数据层）
+- R-001 多源数据接入
+  - 输入源：IADS类流水、CDI-CDEG类海关信息、电商交易、物流履约
+- R-002 特征工程
+  - 输出指标：`gmv_growth`、`refund_rate`、`collection_period`、`customs_alignment_score`
+- R-003 数据新鲜度校验
+  - 规则：`data_freshness_days > 30` 标记 `Stale Data`，并触发评分惩罚
 
-### 3.2 智能决策层 (Reason & Act)
-*   **R-004 动态评分模型**：基于加权规则计算 0-100 信用分。
-    *   新鲜度惩罚：陈旧数据扣 5 分。
-    *   场景调整：检测到“Liquidity Stress”场景扣分。
-*   **R-005 定价矩阵**：
-    *   **Grade A (Score >= 90)**: Limit ~8-12M, Rate Prime+1.5%, **Settlement: mBridge**.
-    *   **Grade B/B+**: Limit ~4-8M, Rate Prime+2.0-2.8%.
-    *   **Grade C/D**: Limit < 4M, Rate Prime+3.8%+, **Need Manual Review**.
+### 3.2 Reason & Act（决策层）
+- R-004 动态评分模型（0-100）
+  - 新鲜度惩罚：`Stale Data` 扣 5 分
+  - 流动性压力场景惩罚：命中 `Liquidity Stress` 扣 3-8 分（区间可配置）
+- R-005 定价矩阵（统一阈值）
+  - Grade A（Score >= 90）：Limit 8-12M，Rate Prime + 1.5%
+  - Grade B（80 <= Score < 90）：Limit 4-8M，Rate Prime + 2.0%~2.8%
+  - Grade C（65 <= Score < 80）：Limit 1-4M，Rate Prime + 3.0%~3.8%，建议人工复核
+  - Grade D（Score < 65）：拒绝自动放款，仅人工审批
 
-### 3.3 可解释性与合规 (Explain)
-*   **R-006 自然语言解释 (NLG)**：为每笔定价生成面向 RM 的英文解释，包含 "Gone Fintech", "Responsible AI" 等战略术语。
-*   **R-007 MPC 隐私声明**：在解释中明确标注计算过程采用了 MPC 技术，原始数据未出库。
-*   **R-008 ISO 20022 审计**：生成的 Audit Payload 必须符合 `camt.053` 标准，包含 `<RmtInf><Strd>` 标签以携带风控元数据。
+### 3.3 Explain（解释与合规）
+- R-006 自然语言解释
+  - 为每笔决策输出英文 explanation，包含关键因子、惩罚项、建议动作
+- R-007 隐私声明
+  - 审计区明确数据最小化原则与脱敏处理方式
+- R-008 审计结构
+  - 输出 ISO 20022-compatible 字段映射（Demo级），不宣称生产报文直连
 
-### 3.4 前端交互 (UI)
-*   **R-009 实时模拟**：提供 "Simulate New CDI Feed" 按钮，支持用户手动触发数据更新，图表需实时响应。
-*   **R-010 结算路径可视化**：对于 mBridge 路径，使用绿色高亮标识，并提供 "View DLT Ledger" 模拟入口。
+### 3.4 UI（交互层）
+- R-009 实时模拟
+  - 支持 `Simulate New CDI Feed`，触发重算并刷新图表
+- R-010 路径可视化
+  - 结算建议路径可视化（mBridge 为模拟推荐通道）
 
 ---
 
 ## 4. 验收标准 (Acceptance Criteria)
 
-### AC-001: 优质客户的自动化流程
-*   **Given**: 选择样本 `GBA_Eco_Standard` (Grade A)，场景为 "Baseline"。
-*   **When**: 点击 "Run TRAE Assessment"。
-*   **Then**:
-    *   风险评分应 > 85 分。
-    *   显示 "Auto-Approved"。
-    *   结算路径显示为绿色的 "mBridge (DLT Atomic Settlement)"。
-    *   AI 解释中包含 "Gone Fintech" 关键词。
+### AC-001 优质商户自动审批路径
+- Given：选择 `GBA_Eco_Standard`，场景 `Baseline`
+- When：点击 `Run TRAE Assessment`
+- Then：
+  - 风险评分 `>= 90`
+  - 决策结果为 `Auto-Approved`
+  - 返回建议额度区间 `8-12M`
+  - Explain 字段完整率 = 100%（含至少 3 个因子 + 1 个动作建议）
 
-### AC-002: 数据滞后的风控惩罚
-*   **Given**: 选择样本 `GBA_Eco_HighRisk`，其数据新鲜度设置为 45 天。
-*   **When**: 点击 "Run TRAE Assessment"。
-*   **Then**:
-    *   风险评分应受到 "Data Freshness" 惩罚（例如扣 5 分）。
-    *   定价结果显示 "Manual Review Required"。
-    *   结算路径回退为 "SWIFT gpi"。
+### AC-002 数据滞后惩罚生效
+- Given：选择 `GBA_Eco_HighRisk`，`data_freshness_days = 45`
+- When：点击 `Run TRAE Assessment`
+- Then：
+  - 触发 `Stale Data` 标记
+  - 评分扣减 5 分（日志可追溯）
+  - 决策结果为 `Manual Review Required` 或拒绝自动放款
 
-### AC-003: 合规审计日志格式
-*   **Given**: 任意评估完成。
-*   **When**: 展开 "Regulatory Audit Log"。
-*   **Then**:
-    *   JSON 结构中应包含 `Document.BkToCstmrStmt.GrpHdr` 等 ISO 20022 标准标签。
-    *   `<RmtInf><Strd>` 字段中应包含评分和欺诈检查结果。
-    *   底部应有 MPC 隐私声明。
+### AC-003 审计与可追溯性
+- Given：任意评估完成
+- When：展开 `Regulatory Audit Log`
+- Then：
+  - 输出请求ID、评分版本、规则命中、定价结果
+  - 支持 ISO 20022-compatible 映射字段展示
+  - 所有关键字段可回溯到本次评估输入
+
+### AC-004 非功能指标
+- 单次评估响应时间（本地演示环境）P95 < 2s
+- 评分-定价-解释链路成功率 >= 99%
 
 ---
 
-## 5. 附录
-*   **架构图**: 详见 `docs/architecture.md`
-*   **HKMA 对齐说明**: 详见 `docs/hkma_mapping.md`
+## 5. 指标体系与复盘机制
+
+### 5.1 核心指标
+- 通过率（Approval Rate）
+- 人工复核率（Manual Review Rate）
+- 预期逾期率（Expected Delinquency）
+- 风险调整后收益（Risk-adjusted Yield）
+
+### 5.2 策略迭代
+- 每轮迭代记录：版本号、阈值变更、影响样本、回滚条件
+- 回滚条件：通过率下降 > 5pp 且风险指标未改善
+
+---
+
+## 6. 风险与限制
+
+- 风险1：替代数据缺失或延迟导致评分抖动
+- 风险2：高增长商户被误判（误杀）
+- 风险3：跨市场规则迁移时阈值失真
+
+应对：
+- 增加数据质量门控和降级策略
+- 保留人工复核兜底
+- 分市场维护参数并做灰度验证
+
+---
+
+## 7. 附录
+- 架构说明：`docs/architecture.md`
+- 数据字典：`docs/data_dictionary.md`
+- API规格：`docs/api_spec.md`

@@ -1,64 +1,89 @@
-# System Architecture: TRAE SME Pricing Engine
+﻿# System Architecture: TRAE-D-SME-Pricing
 
-## Overview
-This document outlines the architecture of the TRAE-D-SME-Pricing engine, demonstrating how it aligns with the HKMA Commercial Data Interchange (CDI) initiative and Responsible AI principles.
+## 1. Overview
+This document defines the architecture of the TRAE-D-SME-Pricing engine and clarifies implementation boundaries for interview/demo usage.
 
-## Data Flow Diagram (Mermaid)
+## 2. Implementation Boundary
+- Implemented
+  - Multi-source data simulation and feature engineering
+  - Rule-based risk scoring and pricing recommendation
+  - Explain output and audit log rendering
+  - Streamlit dashboard interaction loop
+- Simulated
+  - mBridge settlement route recommendation
+  - ISO 20022-compatible audit field mapping
+- Planned
+  - Production-grade banking data connectivity
+  - HKMA FSS integration
+  - MPC-based privacy-preserving computation at scale
+
+## 3. End-to-End Data Flow
 
 ```mermaid
 graph TD
-    subgraph "External Ecosystem (CDI)"
-        E_Comm[E-commerce Platform] --> CDI[Commercial Data Interchange]
-        Customs[Customs/Logistics] --> CDI
-        Bank[Bank Internal Data] --> CDI
+    subgraph External Data (CDI-aligned)
+        EComm[E-commerce Feed] --> Ingest[Data Ingestion]
+        Customs[Customs/Tax Feed] --> Ingest
+        Bank[Bank Flow Feed] --> Ingest
+        Logistics[Logistics Feed] --> Ingest
     end
 
-    subgraph "TRAE Intelligence Core"
-        CDI --> |JSON/API| Transform[Transform: Feature Engineering]
-        Transform --> |Feature Vector| Reason[Reason: Risk Scoring Model]
-        
-        Reason --> |Risk Score| Act[Act: Pricing Engine]
-        Reason --> |Score & Features| Explain[Explain: XAI Module]
-        
-        Act --> |Limit & Rate| Decision[Final Decision Package]
-        Explain --> |Narrative & Audit| Decision
+    subgraph TRAE Core
+        Ingest --> FE[Feature Engineering]
+        FE --> Scoring[Risk Scoring Engine]
+        Scoring --> Pricing[Pricing Engine]
+        Scoring --> Explain[Explainability Engine]
+        Pricing --> Decision[Decision Composer]
+        Explain --> Decision
     end
 
-    subgraph "User Interface & Consumption"
-        Decision --> |Display| UI[Streamlit Dashboard]
-        Decision --> |Log| Audit[Regulatory Audit Log]
+    subgraph Serving Layer
+        Decision --> UI[Streamlit Dashboard]
+        Decision --> Audit[Audit Log Store]
+        Decision --> Monitor[Monitoring Metrics]
     end
-    
-    style CDI fill:#e1f5fe,stroke:#01579b,stroke-width:2px
-    style Reason fill:#fff9c4,stroke:#fbc02d,stroke-width:2px
-    style Act fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
-    style Explain fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
 ```
 
-## Component Details
+## 4. Component Responsibilities
 
-### 1. Transform (Data Pipeline)
-*   **Role**: Simulates the ingestion of alternative data via CDI.
-*   **Key Metrics**: GMV Growth, Refund Rate, Collection Period, Customs Alignment.
-*   **HKMA Alignment**: Demonstrates the use of "Alternative Data" to assess creditworthiness beyond traditional financial statements.
+### 4.1 Data Ingestion & Feature Engineering
+- Normalize inputs into unified merchant-level feature vectors.
+- Validate freshness and completeness.
+- Key features: `gmv_growth`, `refund_rate`, `collection_period`, `customs_alignment_score`.
 
-### 2. Reason & Act (Decision Engine)
-*   **Reasoning**: A weighted scoring model that evaluates business health and compliance.
-*   **Action**: Maps scores to standardized risk grades (A-D) and pricing terms (Spread over Prime).
-*   **Logic**:
-    *   **Grade A**: Prime + 1.5% (High Quality)
-    *   **Grade C/D**: Prime + 3.8%+ (Watch List)
-    *   **Manual Review**: Triggered by high risk or anomalies.
+### 4.2 Risk Scoring Engine
+- Compute score in range 0-100.
+- Apply configurable penalties for stale data and risk scenarios.
+- Output score, grade, and hit rules.
 
-### 3. Explain (Responsible AI)
-*   **Role**: Ensures the "Black Box" is transparent.
-*   **Output**:
-    *   **RM Narrative**: Natural language explanation for relationship managers.
-    *   **Feature Importance**: Quantifies which factors drove the decision (Global/Local interpretability).
-    *   **Audit Payload**: Immutable record of the decision context for regulatory review.
+### 4.3 Pricing Engine
+- Map risk grade to recommended limit/rate bands.
+- Return pricing plus reason codes for traceability.
 
-## Future Evolution (Roadmap)
+### 4.4 Explainability Engine
+- Generate analyst-facing natural language explanation.
+- Include top contributing factors and triggered penalties.
 
-*   **Sandbox**: Deploy to HKMA Fintech Supervisory Sandbox (FSS) for pilot testing with real bank data.
-*   **Model Upgrade**: Replace rule-based scoring with Gradient Boosting (XGBoost) or LLM-based reasoning for unstructured data.
-*   **Live CDI**: Connect to live CDI APIs via API Gateway.
+### 4.5 Decision Composer
+- Consolidate scoring + pricing + explain output.
+- Mark decision status: `Auto-Approved`, `Manual Review`, or `Reject`.
+
+### 4.6 Audit & Monitoring
+- Persist request/response snapshots by request id.
+- Track approval rate, review rate, expected delinquency, and latency.
+
+## 5. Reliability and Controls
+- Data quality gate before scoring.
+- Graceful degradation when fields are missing.
+- Versioned strategy config and rollback support.
+- Full decision traceability for each assessment run.
+
+## 6. Security and Compliance Notes
+- Demo environment uses masked/sample data only.
+- Audit schema is ISO 20022-compatible for demonstration; not a production payment message pipeline.
+- Privacy statement included in decision logs.
+
+## 7. Deployment (Demo)
+- Runtime: Streamlit app
+- Packaging: Python app with local config and sample datasets
+- Intended usage: interview demonstration and product discussion
