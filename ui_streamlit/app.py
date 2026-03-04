@@ -280,6 +280,21 @@ st.markdown(
 with st.expander("PRD Alignment (Scoring -> Pricing Matrix)", expanded=False):
     base_score = result.get("base_score", score)
     penalties = result.get("penalties", [])
+    dim_scores = result.get("dimension_scores", {})
+    dim_weights = result.get("dimension_weights", {})
+    if dim_scores and dim_weights:
+        dim_df = pd.DataFrame(
+            [
+                {
+                    "dimension": k,
+                    "score": round(dim_scores.get(k, 0.0), 1),
+                    "weight": dim_weights.get(k, 0.0),
+                    "weighted_contribution": round(dim_scores.get(k, 0.0) * dim_weights.get(k, 0.0), 1),
+                }
+                for k in dim_weights
+            ]
+        )
+        st.dataframe(dim_df, use_container_width=True, hide_index=True, height=220)
     st.markdown(f"- Base Score (from derived features): `{base_score:.1f}`")
     if penalties:
         for p in penalties:
@@ -317,13 +332,20 @@ with left:
     gauge.update_layout(height=280, margin=dict(l=20, r=20, t=20, b=0))
     st.plotly_chart(gauge, use_container_width=True)
 
-    features = result.get("features", {})
-    radar_categories = ["GMV Growth", "Refund Quality", "Collection Speed", "Compliance"]
+    dim_scores = result.get("dimension_scores", {})
+    radar_categories = [
+        "Ecommerce",
+        "Customs/Tax",
+        "Bankflow",
+        "Logistics",
+        "Data Freshness",
+    ]
     radar_values = [
-        min(features.get("gmv_growth", 0) * 2, 1.0),
-        max(0, 1.0 - (features.get("refund_rate", 0) * 8)),
-        max(0, 1.0 - (features.get("collection_period", 90) / 100.0)),
-        features.get("customs_alignment_score", 0),
+        dim_scores.get("ecommerce_behavior", 0.0) / 100.0,
+        dim_scores.get("customs_tax_compliance", 0.0) / 100.0,
+        dim_scores.get("bankflow_stability", 0.0) / 100.0,
+        dim_scores.get("logistics_fulfillment", 0.0) / 100.0,
+        dim_scores.get("data_freshness_reliability", 0.0) / 100.0,
     ]
     radar_values += [radar_values[0]]
     radar_categories += [radar_categories[0]]

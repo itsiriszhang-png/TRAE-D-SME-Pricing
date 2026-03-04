@@ -12,37 +12,68 @@ from explainability.shap_explainer import get_explanations
 from pricing_model.engine import compute_pricing
 
 
-def calculate_score(features: dict) -> float:
-    """Simple weighted score (0-100) for demo purposes."""
-    if not features:
-        return 0.0
+def _clamp(x: float, low: float = 0.0, high: float = 100.0) -> float:
+    return max(low, min(high, x))
 
-    score = 0.0
 
-    growth = features.get("gmv_growth", 0)
+def calculate_dimension_scores(features: dict, cdi_sources: dict) -> dict:
+    """
+    Build five-dimension scores (0-100):
+    1) Ecommerce behavior
+    2) Customs/Tax compliance
+    3) Bank flow stability
+    4) Logistics fulfillment
+    5) Data freshness reliability
+    """
+    growth = float(features.get("gmv_growth", 0))
+    refund = float(features.get("refund_rate", 0))
+    collection_days = float(features.get("collection_period", 90))
+    customs_align = float(features.get("customs_alignment_score", 0))
+    freshness_days = float(features.get("data_freshness_days", 90))
+
+    # 1) Ecommerce behavior
     if 0.05 <= growth <= 0.5:
-        score += 20
+        growth_score = 95.0
     elif growth > 0.5:
-        score += 12
+        growth_score = 55.0
     else:
-        score += 6
+        growth_score = 45.0
 
-    refund = features.get("refund_rate", 0)
-    if refund < 0.03:
-        score += 20
-    elif refund < 0.1:
-        score += 10
+    if refund <= 0.03:
+        refund_score = 95.0
+    elif refund <= 0.1:
+        refund_score = 60.0
+    else:
+        refund_score = 25.0
+    ecommerce_score = _clamp(0.6 * growth_score + 0.4 * refund_score)
 
-    days = features.get("collection_period", 90)
-    if days <= 45:
-        score += 20
-    elif days <= 75:
-        score += 12
+    # 2) Customs/Tax compliance
+    customs_score = _clamp(customs_align * 100.0)
 
-    align = features.get("customs_alignment_score", 0)
-    score += 40 * align
+    # 3) Bank flow stability (proxy by collection period)
+    if collection_days <= 45:
+        bankflow_score = 95.0
+    elif collection_days <= 75:
+        bankflow_score = 65.0
+    else:
+        bankflow_score = 25.0
 
-    return round(score, 1)
+    # 4) Logistics fulfillment (from CDI logistics source)
+    logistics = cdi_sources.get("Logistics_Fulfillment", {})
+    ontime = float(logistics.get("ontime_delivery_rate_30d", 0.8))
+    lost_damage = float(logistics.get("lost_damage_ratio_30d", 0.02))
+    logistics_score = _clamp((ontime * 100.0) * 0.8 + (100.0 - lost_damage * 1000.0) * 0.2)
+
+    # 5) Data freshness reliability
+    freshness_score = _clamp(100.0 - freshness_days * 2.0)
+
+    return {
+        "ecommerce_behavior": round(ecommerce_score, 1),
+        "customs_tax_compliance": round(customs_score, 1),
+        "bankflow_stability": round(bankflow_score, 1),
+        "logistics_fulfillment": round(logistics_score, 1),
+        "data_freshness_reliability": round(freshness_score, 1),
+    }
 
 
 def run_trae_for_sme(sme_id: str, scenario: str) -> dict:
@@ -52,7 +83,20 @@ def run_trae_for_sme(sme_id: str, scenario: str) -> dict:
     if not features:
         return {"error": f"SME {sme_id} not found"}
 
-    base_score = calculate_score(features)
+    cdi_sources = payload.get("cdi_sources", {})
+    dimension_scores = calculate_dimension_scores(features, cdi_sources)
+    dimension_weights = {
+        "ecommerce_behavior": 0.35,
+        "customs_tax_compliance": 0.25,
+        "bankflow_stability": 0.20,
+        "logistics_fulfillment": 0.10,
+        "data_freshness_reliability": 0.10,
+    }
+
+    base_score = round(
+        sum(dimension_scores[k] * w for k, w in dimension_weights.items()),
+        1,
+    )
     score = base_score
     penalties = []
 
@@ -90,6 +134,8 @@ def run_trae_for_sme(sme_id: str, scenario: str) -> dict:
         "base_score": base_score,
         "score": score,
         "penalties": penalties,
+        "dimension_scores": dimension_scores,
+        "dimension_weights": dimension_weights,
         "pricing": asdict(pricing_result),
         "explanation": {
             "narrative": explanation_result.narrative,
@@ -97,7 +143,7 @@ def run_trae_for_sme(sme_id: str, scenario: str) -> dict:
             "audit_payload": explanation_result.audit_payload,
         },
         "features": features,
-        "cdi_sources": payload.get("cdi_sources", {}),
+        "cdi_sources": cdi_sources,
         "feature_lineage": [
             {"derived_feature": "gmv_growth", "source_domain": "Ecommerce_Transactions", "source_fields": "gmv_30d_usd, order_count_30d"},
             {"derived_feature": "refund_rate", "source_domain": "Ecommerce_Transactions", "source_fields": "refund_ratio_30d, chargeback_ratio_30d"},
