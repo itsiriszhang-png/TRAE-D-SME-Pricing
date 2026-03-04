@@ -19,7 +19,7 @@ from pricing_model.engine import compute_pricing
 
 st.set_page_config(
     page_title="TRAE-D-SME Pricing Studio",
-    page_icon="TRAE",
+    page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -245,19 +245,19 @@ score = result["score"]
 c1, c2, c3, c4, c5 = st.columns(5)
 with c1:
     st.markdown('<div class="kpi">Risk Score</div>', unsafe_allow_html=True)
-    st.metric("", f"{score:.1f}/100", delta=f"raw {result.get('score_raw', score):.1f}")
+    st.metric("Risk Score", f"{score:.1f}/100", delta=f"raw {result.get('score_raw', score):.1f}", label_visibility="collapsed")
 with c2:
     st.markdown('<div class="kpi">Risk Grade</div>', unsafe_allow_html=True)
-    st.metric("", pricing["risk_grade"])
+    st.metric("Risk Grade", pricing["risk_grade"], label_visibility="collapsed")
 with c3:
     st.markdown('<div class="kpi">Credit Limit</div>', unsafe_allow_html=True)
-    st.metric("", f"${pricing['credit_limit']:,.0f}")
+    st.metric("Credit Limit", f"${pricing['credit_limit']:,.0f}", label_visibility="collapsed")
 with c4:
     st.markdown('<div class="kpi">Pricing</div>', unsafe_allow_html=True)
-    st.metric("", pricing["base_rate_str"])
+    st.metric("Pricing", pricing["base_rate_str"], label_visibility="collapsed")
 with c5:
     st.markdown('<div class="kpi">Manual Review</div>', unsafe_allow_html=True)
-    st.metric("", "Required" if pricing["need_manual_review"] else "Not Required")
+    st.metric("Manual Review", "Required" if pricing["need_manual_review"] else "Not Required", label_visibility="collapsed")
 
 st.markdown(
     '<span class="caption-chip">Profile: {}</span><span class="caption-chip">Scenario: {}</span><span class="caption-chip">Macro: {:.2f}x</span>'.format(
@@ -339,7 +339,7 @@ with right:
     df_features = pd.DataFrame(
         {
             "feature": list(features.keys()),
-            "value": list(features.values()),
+            "value": [str(v) for v in features.values()],
         }
     )
     st.dataframe(df_features, use_container_width=True, hide_index=True, height=240)
