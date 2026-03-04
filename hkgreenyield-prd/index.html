@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HKGreenYield · Product Requirements Document v2.0</title>
+<style>
+  :root {
+    --green: #16a34a;
+    --green-light: #dcfce7;
+    --green-dark: #14532d;
+    --blue: #1d4ed8;
+    --blue-light: #dbeafe;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-400: #9ca3af;
+    --gray-600: #4b5563;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+    --gold: #d97706;
+    --gold-light: #fef3c7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    color: var(--gray-800);
+    background: #fff;
+    line-height: 1.6;
+    font-size: 15px;
+  }
+
+  /* ── COVER ── */
+  .cover {
+    background: linear-gradient(135deg, #052e16 0%, #14532d 40%, #166534 100%);
+    color: white;
+    padding: 64px 48px 56px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -80px;
+    width: 320px; height: 320px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+  }
+  .cover::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; left: 40%;
+    width: 240px; height: 240px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.03);
+  }
+  .cover-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .cover-badge .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #4ade80;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .cover h1 {
+    font-size: 42px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin-bottom: 12px;
+  }
+  .cover h1 span { color: #4ade80; }
+  .cover .tagline {
+    font-size: 18px;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 36px;
+    max-width: 560px;
+  }
+  .cover-meta {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    border-top: 1px solid rgba(255,255,255,0.15);
+    padding-top: 28px;
+    margin-top: 8px;
+  }
+  .cover-meta-item { font-size: 13px; }
+  .cover-meta-item .label { color: rgba(255,255,255,0.5); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 3px; }
+  .cover-meta-item .value { color: white; font-weight: 600; }
+
+  /* ── LAYOUT ── */
+  .container { max-width: 900px; margin: 0 auto; padding: 0 32px; }
+  .toc-bar {
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--gray-200);
+    padding: 0 32px;
+  }
+  .toc-bar nav {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+  }
+  .toc-bar nav a {
+    display: block;
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-600);
+    text-decoration: none;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+  }
+  .toc-bar nav a:hover { color: var(--green); border-bottom-color: var(--green); }
+
+  /* ── SECTIONS ── */
+  .section { padding: 52px 0 16px; border-bottom: 1px solid var(--gray-100); }
+  .section:last-child { border-bottom: none; }
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .section-num {
+    width: 28px; height: 28px;
+    background: var(--green);
+    color: white;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .section-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--gray-900);
+  }
+  h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin: 28px 0 12px;
+  }
+  p { color: var(--gray-600); margin-bottom: 12px; }
+
+  /* ── CALLOUT BOXES ── */
+  .callout {
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 16px 0;
+    border-left: 4px solid;
+  }
+  .callout.green { background: var(--green-light); border-color: var(--green); }
+  .callout.blue { background: var(--blue-light); border-color: var(--blue); }
+  .callout.gold { background: var(--gold-light); border-color: var(--gold); }
+  .callout-title { font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+  .callout.green .callout-title { color: var(--green-dark); }
+  .callout.blue .callout-title { color: var(--blue); }
+  .callout.gold .callout-title { color: var(--gold); }
+
+  /* ── STAT GRID ── */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin: 20px 0;
+  }
+  .stat-card {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+  .stat-card .num {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--green);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-card .desc { font-size: 12px; color: var(--gray-600); }
+
+  /* ── TABLES ── */
+  .table-wrap { overflow-x: auto; margin: 16px 0; border-radius: 10px; border: 1px solid var(--gray-200); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  thead th {
+    background: var(--gray-800);
+    color: white;
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  tbody td { padding: 10px 14px; border-bottom: 1px solid var(--gray-100); color: var(--gray-600); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--gray-50); }
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .tag-p0 { background: #fee2e2; color: #991b1b; }
+  .tag-p1 { background: #fef3c7; color: #92400e; }
+  .tag-p2 { background: #dbeafe; color: #1e40af; }
+  .tag-no { background: var(--gray-100); color: var(--gray-600); }
+  .tag-green { background: var(--green-light); color: var(--green-dark); }
+  .tag-blue { background: var(--blue-light); color: var(--blue); }
+
+  /* ── FLOW DIAGRAM ── */
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 20px 0;
+    flex-wrap: wrap;
+  }
+  .flow-step {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    min-width: 110px;
+    color: var(--gray-800);
+  }
+  .flow-step.highlight {
+    background: var(--green-light);
+    border-color: var(--green);
+    color: var(--green-dark);
+  }
+  .flow-arrow {
+    font-size: 18px;
+    color: var(--gray-400);
+    padding: 0 6px;
+    flex-shrink: 0;
+  }
+
+  /* ── COMPARISON CARDS ── */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin: 16px 0;
+  }
+  .compare-card {
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .compare-card.us {
+    border-color: var(--green);
+    background: var(--green-light);
+  }
+  .compare-card h4 {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: var(--gray-900);
+  }
+  .compare-card.us h4 { color: var(--green-dark); }
+  .compare-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    gap: 8px;
+  }
+  .compare-row:last-child { border-bottom: none; }
+  .compare-row .k { color: var(--gray-600); }
+  .compare-row .v { font-weight: 600; color: var(--gray-900); }
+  .compare-card.us .compare-row .v { color: var(--green-dark); }
+
+  /* ── USER STORY ── */
+  .story-box {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin: 16px 0;
+  }
+  .story-box .epic-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--green);
+    margin-bottom: 8px;
+  }
+  .story-box .story { font-size: 14px; font-style: italic; color: var(--gray-700); margin-bottom: 14px; }
+  .story-box .ac-title { font-size: 12px; font-weight: 700; color: var(--gray-900); margin-bottom: 6px; }
+  .ac-list { list-style: none; padding: 0; }
+  .ac-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--gray-600);
+    padding: 3px 0;
+  }
+  .ac-list li::before {
+    content: '✓';
+    color: var(--green);
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* ── SWOT ── */
+  .swot-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 16px 0;
+  }
+  .swot-card {
+    border-radius: 10px;
+    padding: 16px 18px;
+    border: 1px solid;
+  }
+  .swot-card h4 { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+  .swot-card ul { padding-left: 16px; }
+  .swot-card li { font-size: 13px; margin-bottom: 4px; }
+  .swot-s { background: #dcfce7; border-color: #86efac; }
+  .swot-s h4 { color: #166534; }
+  .swot-s li { color: #15803d; }
+  .swot-w { background: #fee2e2; border-color: #fca5a5; }
+  .swot-w h4 { color: #991b1b; }
+  .swot-w li { color: #b91c1c; }
+  .swot-o { background: #dbeafe; border-color: #93c5fd; }
+  .swot-o h4 { color: #1e40af; }
+  .swot-o li { color: #2563eb; }
+  .swot-t { background: #fef3c7; border-color: #fcd34d; }
+  .swot-t h4 { color: #92400e; }
+  .swot-t li { color: #b45309; }
+
+  /* ── ROADMAP ── */
+  .roadmap { margin: 16px 0; }
+  .roadmap-phase {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    align-items: flex-start;
+  }
+  .phase-tag {
+    flex-shrink: 0;
+    width: 80px;
+    background: var(--gray-800);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+    padding: 6px 8px;
+    border-radius: 6px;
+    line-height: 1.3;
+  }
+  .phase-tag.active { background: var(--green); }
+  .phase-content {
+    flex: 1;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    padding: 12px 16px;
+  }
+  .phase-content h4 { font-size: 13px; font-weight: 700; color: var(--gray-900); margin-bottom: 6px; }
+  .phase-content p { font-size: 13px; color: var(--gray-600); margin: 0; }
+
+  /* ── FOOTER ── */
+  .doc-footer {
+    background: var(--gray-900);
+    color: white;
+    padding: 32px 48px;
+    margin-top: 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: gap;
+    gap: 16px;
+  }
+  .doc-footer .left { font-size: 14px; }
+  .doc-footer .left .name { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
+  .doc-footer .left .sub { color: rgba(255,255,255,0.5); font-size: 12px; }
+  .doc-footer .links { display: flex; gap: 16px; flex-wrap: wrap; }
+  .doc-footer .links a {
+    color: #4ade80;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .doc-footer .links a:hover { text-decoration: underline; }
+
+  /* ── MISC ── */
+  ul.plain { list-style: none; padding: 0; }
+  ul.plain li {
+    padding: 5px 0;
+    font-size: 14px;
+    color: var(--gray-600);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  ul.plain li::before { content: '→'; color: var(--green); font-weight: 700; flex-shrink: 0; }
+  .divider { border: none; border-top: 1px solid var(--gray-100); margin: 24px 0; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media(max-width:640px) {
+    .cover { padding: 40px 24px; }
+    .cover h1 { font-size: 28px; }
+    .container { padding: 0 20px; }
+    .toc-bar { padding: 0 20px; }
+    .two-col { grid-template-columns: 1fr; }
+    .swot-grid { grid-template-columns: 1fr; }
+    .doc-footer { padding: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ COVER ══ -->
+<div class="cover">
+  <div class="container" style="position:relative;z-index:1">
+    <div class="cover-badge">
+      <span class="dot"></span>
+      Product Requirements Document · v2.0
+    </div>
+    <h1>HKGreen<span>Yield</span></h1>
+    <p class="tagline">Hong Kong's First Retail-Accessible Green Asset Tokenisation Platform — Compliant, Transparent, DeFi-Native</p>
+    <div class="cover-meta">
+      <div class="cover-meta-item">
+        <div class="label">Author</div>
+        <div class="value">Yixin Zhang · CUHK MSc SEEM 2027</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="label">Version</div>
+        <div class="value">v2.0 — February 2026</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="label">Regulatory Scope</div>
+        <div class="value">HKMA Project Ensemble Sandbox</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="label">Token Standard</div>
+        <div class="value">ERC-3643 (T-REX Protocol)</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="label">Target Launch</div>
+        <div class="value">Q3 2027 · Hong Kong</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOC ══ -->
+<div class="toc-bar">
+  <nav>
+    <a href="#summary">Executive Summary</a>
+    <a href="#problem">Problem & Market</a>
+    <a href="#users">User Research</a>
+    <a href="#product">Product Design</a>
+    <a href="#technical">Technical Architecture</a>
+    <a href="#compliance">Compliance</a>
+    <a href="#competitive">Competitive Analysis</a>
+    <a href="#metrics">Metrics & Roadmap</a>
+    <a href="#risks">Risks</a>
+  </nav>
+</div>
+
+<div class="container">
+
+<!-- ══ 0 · EXECUTIVE SUMMARY ══ -->
+<div class="section" id="summary">
+  <div class="section-label">
+    <div class="section-num">0</div>
+    <div class="section-title">Executive Summary</div>
+  </div>
+
+  <div class="callout green">
+    <div class="callout-title">Core Thesis</div>
+    HKGreenYield tokenises green bonds and carbon credits into ERC-3643 compliant on-chain tokens, enabling Hong Kong retail investors to access green finance from as little as <strong>HKD 100</strong> — the lowest entry point in the industry — while providing real-time, tamper-proof ESG data via Chainlink Oracle, eliminating greenwashing risk.
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="num">HKD 100</div>
+      <div class="desc">Minimum investment (industry's lowest vs. HKD 5,000–10,000+ incumbents)</div>
+    </div>
+    <div class="stat-card">
+      <div class="num">T+0</div>
+      <div class="desc">Liquidity redemption, 24/7 via on-chain AMM pool</div>
+    </div>
+    <div class="stat-card">
+      <div class="num">60 sec</div>
+      <div class="desc">KYC completion via AI face recognition + ERC-3643 auto-whitelist</div>
+    </div>
+    <div class="stat-card">
+      <div class="num">$1M</div>
+      <div class="desc">Year-1 TVL target; $10M by 2030</div>
+    </div>
+    <div class="stat-card">
+      <div class="num">0</div>
+      <div class="desc">Greenwashing risk — all ESG data written on-chain via IoT sensors</div>
+    </div>
+  </div>
+
+  <div class="two-col" style="margin-top:20px">
+    <div>
+      <h3>Problems We Solve</h3>
+      <ul class="plain">
+        <li>Retail investors locked out of green finance (minimum tickets HKD 5,000–100,000+)</li>
+        <li>Near-zero secondary market liquidity — investors are trapped for 5+ years</li>
+        <li>Greenwashing epidemic: SFC's 2025 green product guidelines signal regulatory urgency</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Our Solution</h3>
+      <ul class="plain">
+        <li>Fractional ownership via on-chain tokenisation brings minimum to HKD 100</li>
+        <li>24/7 on-chain trading + T+0 settlement via AMM liquidity pool</li>
+        <li>Chainlink Oracle directly feeds IoT sensor data to blockchain — immutable</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 1 · PROBLEM & MARKET ══ -->
+<div class="section" id="problem">
+  <div class="section-label">
+    <div class="section-num">1</div>
+    <div class="section-title">Problem Definition & Market Opportunity</div>
+  </div>
+
+  <h3>1.1 Regulatory Tailwinds — The Window Is Now</h3>
+  <p>Hong Kong sits at the intersection of two major policy pushes: green finance and Web3. This 2–3 year window is critical:</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Year</th><th>Regulatory Development</th><th>Significance for HKGreenYield</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>2023</td><td>HKMA Project Evergreen — world's first government green bond tokenisation</td><td>Proves institutional viability; establishes HKMA's appetite</td></tr>
+        <tr><td>2023</td><td>SFC VATP licensing framework launched</td><td>Legal clarity for digital asset platforms in HK</td></tr>
+        <tr><td>2024</td><td>HKMA Project Ensemble — tokenised asset interoperability sandbox</td><td>Direct route-to-market for RWA platforms</td></tr>
+        <tr><td>2025</td><td>SFC green product guidelines published</td><td>Anti-greenwashing rules create demand for on-chain verification</td></tr>
+        <tr><td>2026–27</td><td>Expected HKMA retail digital asset framework</td><td><strong>Target window for HKGreenYield MVP launch</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>1.2 Three Core Pain Points</h3>
+  <div class="callout blue">
+    <div class="callout-title">Pain Point 1: Investment Barrier — Retail Excluded</div>
+    HSBC Orion and DigiFT minimum subscription: USD 5,000–10,000. Institutional products: USD 100,000+. ~60% of HK retail investors have monthly savings of HKD 5,000–15,000 — effectively excluded from green finance entirely.
+  </div>
+  <div class="callout gold">
+    <div class="callout-title">Pain Point 2: Liquidity Trap — Can't Exit</div>
+    Traditional green bonds settle T+2 with high friction, locking retail holders for 5+ years. Liquidity premium erosion means actual returns are significantly lower than stated yield.
+  </div>
+  <div class="callout green">
+    <div class="callout-title">Pain Point 3: Greenwashing — No Independent Verification</div>
+    EU SFDR investigations and HK SFC 2025 guidelines highlight systemic greenwashing. Retail investors have no way to independently verify whether their "green" investment is actually reducing emissions.
+  </div>
+
+  <h3>1.3 Market Sizing (TAM / SAM / SOM)</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Level</th><th>Definition</th><th>Estimate</th><th>Source</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>TAM</strong></td><td>Global green bond + carbon credit tokenisation potential</td><td>USD 6,000B+</td><td>HSBC Green Bond Report + BloombergNEF Carbon Market Forecast</td></tr>
+        <tr><td><strong>SAM</strong></td><td>Asia-Pacific RWA tokenisation market (incl. HK, SG)</td><td>USD 120B (2026E)</td><td>BCG × ADDX Report; USD 600B forecast by 2030</td></tr>
+        <tr><td><strong>SOM</strong></td><td>HK retail green investment platform market (3-year horizon)</td><td>USD 50M–100M</td><td>SFC retail investor survey + competitive benchmarking</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ 2 · USER RESEARCH ══ -->
+<div class="section" id="users">
+  <div class="section-label">
+    <div class="section-num">2</div>
+    <div class="section-title">User Research & Personas</div>
+  </div>
+
+  <h3>2.1 User Segmentation</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Segment</th><th>Share</th><th>Profile</th><th>Core JTBD</th><th>WTP</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>🟢 Retail Investor ("小明")</strong></td>
+          <td>70%</td>
+          <td>28 y/o HK professional, monthly income HKD 25k, ESG-conscious</td>
+          <td>Participate in green investing with small capital; demonstrate environmental contribution</td>
+          <td>HKD 100–500 / month</td>
+        </tr>
+        <tr>
+          <td><strong>🔵 Institutional Investor</strong></td>
+          <td>20%</td>
+          <td>Fund/bank treasury team, USD 10k–1M tickets</td>
+          <td>Compliant RWA collateral for repo and portfolio diversification</td>
+          <td>Very high (platform fee secondary)</td>
+        </tr>
+        <tr>
+          <td><strong>🌱 Green Project Issuer</strong></td>
+          <td>10%</td>
+          <td>Wind/solar CFO seeking diversified funding channels</td>
+          <td>Tokenise project cashflows to reach global investors, reduce funding cost, enhance transparency</td>
+          <td>Medium (platform issuance fee)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>2.2 Primary User Journey — Retail "小明" (HKD 200 first investment)</h3>
+
+  <div class="flow">
+    <div class="flow-step">Discovery<br/><small style="font-weight:400;color:#6b7280">Xiaohongshu ad</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Registration<br/><small style="font-weight:400;color:#6b7280">Download app</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step highlight">KYC<br/><small style="font-weight:400;color:#166534">60 seconds</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step highlight">First Purchase<br/><small style="font-weight:400;color:#166534">3 steps, HKD 200</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Hold & Track<br/><small style="font-weight:400;color:#6b7280">ESG dashboard</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Redemption<br/><small style="font-weight:400;color:#6b7280">T+0 exit</small></div>
+  </div>
+
+  <div class="table-wrap" style="margin-top:16px">
+    <table>
+      <thead>
+        <tr><th>Stage</th><th>User Action</th><th>Emotion</th><th>Pain Point</th><th>Our Solution</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Discovery</td><td>Sees "HKD 100 green bond investment" on Xiaohongshu</td><td>😮 Curious</td><td>Is it trustworthy?</td><td>KOL partnership + HKMA sandbox badge</td></tr>
+        <tr><td>Registration</td><td>Downloads app, face ID KYC</td><td>😊 Smooth</td><td>Traditional KYC takes 3–7 days</td><td>ERC-3643 auto-whitelist, 60-second AI KYC</td></tr>
+        <tr><td>First Purchase</td><td>Selects project, enters HKD 200, confirms</td><td>😰 Slightly anxious</td><td>Gas fees? Scam risk?</td><td>Polygon L2: Gas &lt;HKD 0.01; VCS certification badge displayed</td></tr>
+        <tr><td>Hold & Track</td><td>Views "My ESG Impact": 120kg CO₂ avoided</td><td>😊 Proud</td><td>Where does my money go?</td><td>Chainlink Oracle real-time updates; shareable NFT carbon proof</td></tr>
+        <tr><td>Redemption</td><td>T+0 sell, or refer friends for rewards</td><td>✅ Satisfied</td><td>Liquidity lock-in</td><td>24/7 AMM liquidity pool + referral incentive</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ 3 · PRODUCT DESIGN ══ -->
+<div class="section" id="product">
+  <div class="section-label">
+    <div class="section-num">3</div>
+    <div class="section-title">Product Design</div>
+  </div>
+
+  <h3>3.1 Vision & Scope</h3>
+  <div class="callout green">
+    <div class="callout-title">Product Vision</div>
+    "Let every Hong Konger participate in Hong Kong's green future at the price of a milk tea — and see exactly how their investment is reducing carbon emissions."
+  </div>
+  <p><strong>MVP Scope (Phase 1, Q1–Q3 2027):</strong> Core retail app — account registration, KYC, token purchase (Mint), ESG dashboard, auto-Rebase yield, T+0 redemption. Institutional API and secondary market DEX integration are Phase 2.</p>
+
+  <h3>3.2 Feature Priority Matrix (MoSCoW)</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Priority</th><th>Feature</th><th>Description</th><th>User Value</th><th>Tech Complexity</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="tag tag-p0">P0 Must</span></td>
+          <td>Account Registration & KYC</td>
+          <td>In-app face recognition + ERC-3643 auto-whitelist, completed in 60s</td>
+          <td>Removes compliance barrier — user's #1 drop-off point</td>
+          <td>Medium</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-p0">P0 Must</span></td>
+          <td>Token Purchase (Mint)</td>
+          <td>Select project → input amount → confirm → on-chain mint on Polygon L2</td>
+          <td>Core use case; product reason-to-exist</td>
+          <td>Medium</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-p0">P0 Must</span></td>
+          <td>ESG Data Dashboard</td>
+          <td>Chainlink Oracle pulls IoT data hourly; displays CO₂ reduction, total project emissions</td>
+          <td>USP core — differentiates from all incumbents</td>
+          <td>High</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-p0">P0 Must</span></td>
+          <td>Auto-Rebase Yield</td>
+          <td>Daily automatic token quantity increase based on underlying bond coupon rate</td>
+          <td>Zero-operation passive yield; improves D30 retention</td>
+          <td>High</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-p1">P1 Should</span></td>
+          <td>T+0 Token Redemption</td>
+          <td>Redeem to fiat bank account at any time; 24/7 AMM liquidity pool</td>
+          <td>Solves liquidity pain point — critical for trust</td>
+          <td>High</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-p1">P1 Should</span></td>
+          <td>NFT Carbon Certificate</td>
+          <td>Annual CO₂ reduction minted as transferable NFT; shareable to social media</td>
+          <td>Emotional value + viral social distribution (lowers CAC)</td>
+          <td>Medium</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-p1">P1 Should</span></td>
+          <td>Referral Reward System</td>
+          <td>Share link → both parties earn token/fee discount upon successful referral</td>
+          <td>Reduces CAC; drives viral growth</td>
+          <td>Low</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-p2">P2 Could</span></td>
+          <td>Institutional API (B2B)</td>
+          <td>White-label API for banks/funds to integrate HKGreenYield products</td>
+          <td>Opens B2B revenue channel</td>
+          <td>High</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-no">Won't MVP</span></td>
+          <td>DEX Order Book</td>
+          <td>On-chain secondary market P2P trading</td>
+          <td>High complexity — post-MVP</td>
+          <td>Very High</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>3.3 Core User Stories & Acceptance Criteria</h3>
+
+  <div class="story-box">
+    <div class="epic-label">Epic 1 — Account Registration & KYC</div>
+    <div class="story">"As a Hong Kong retail investor, I want to complete account registration and identity verification within 5 minutes, so that I can immediately start buying green bond tokens without being deterred by a lengthy process."</div>
+    <div class="ac-title">Acceptance Criteria:</div>
+    <ul class="ac-list">
+      <li>Face recognition completes in &lt; 60 seconds</li>
+      <li>KYC result returned in real-time (AI initial review + human fallback)</li>
+      <li>On rejection: clear reason + appeal entry point provided</li>
+      <li>ERC-3643 whitelist auto-updated; zero manual intervention</li>
+    </ul>
+  </div>
+
+  <div class="story-box">
+    <div class="epic-label">Epic 2 — First Token Purchase</div>
+    <div class="story">"As a KYC-verified retail user, I want to purchase a specific green project's token for HKD 200, so that I can participate in investment and start tracking my environmental impact."</div>
+    <div class="ac-title">Acceptance Criteria:</div>
+    <ul class="ac-list">
+      <li>Project listing shows APY / VCS certification / remaining quota</li>
+      <li>Purchase completes in ≤ 3 steps (select → input amount → confirm)</li>
+      <li>Gas fee &lt; HKD 0.10 per transaction (Polygon L2)</li>
+      <li>Tokens appear in account within 30 seconds of purchase confirmation</li>
+      <li>Supports FPS and Faster Payment System top-up</li>
+    </ul>
+  </div>
+
+  <div class="story-box">
+    <div class="epic-label">Epic 3 — ESG Impact Tracking</div>
+    <div class="story">"As a token holder, I want to view real-time CO₂ reduction data corresponding to my investment, so that I feel the environmental value of my investment and can share it with friends."</div>
+    <div class="ac-title">Acceptance Criteria:</div>
+    <ul class="ac-list">
+      <li>Dashboard data updated hourly (triggered by Chainlink Oracle)</li>
+      <li>Displays: personal CO₂ reduction (cumulative / this month) + equivalence ("equivalent to planting X trees")</li>
+      <li>Supports generating shareable card (with NFT on-chain verification code)</li>
+      <li>Data source link publicly accessible and on-chain verifiable</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ══ 4 · TECHNICAL ARCHITECTURE ══ -->
+<div class="section" id="technical">
+  <div class="section-label">
+    <div class="section-num">4</div>
+    <div class="section-title">Technical Architecture</div>
+  </div>
+
+  <h3>4.1 System Architecture Overview</h3>
+
+  <div class="flow" style="flex-wrap:wrap; gap:12px; justify-content:center">
+    <div class="flow-step" style="min-width:130px">IoT Sensors<br/><small style="font-weight:400;color:#6b7280">Wind turbines, solar panels</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step highlight" style="min-width:130px">Chainlink Oracle<br/><small style="font-weight:400;color:#166534">Off-chain → On-chain bridge</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step highlight" style="min-width:130px">Smart Contract<br/><small style="font-weight:400;color:#166534">ERC-3643 T-REX</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step" style="min-width:130px">App / API<br/><small style="font-weight:400;color:#6b7280">React Native + REST</small></div>
+  </div>
+
+  <h3>4.2 Blockchain Layer Design</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Component</th><th>Choice</th><th>Rationale</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Token Standard</strong></td><td>ERC-3643 (T-REX Protocol)</td><td>Only security token standard with built-in identity module (ONCHAINID) + transfer restriction controls; required for regulatory compliance</td></tr>
+        <tr><td><strong>L1 / L2 Network</strong></td><td>Polygon PoS (MVP) → Ethereum mainnet (Phase 2)</td><td>Polygon: Gas &lt;USD 0.01, 2s finality; Ethereum anchor for institutional trust</td></tr>
+        <tr><td><strong>Oracle</strong></td><td>Chainlink Data Feeds</td><td>Industry standard; tamper-proof; direct IoT sensor integration; used by Aave, Compound</td></tr>
+        <tr><td><strong>Yield Mechanism</strong></td><td>Rebase Token (elastic supply)</td><td>Token quantity auto-increases daily; zero user operation required; maximises D30 retention</td></tr>
+        <tr><td><strong>Liquidity</strong></td><td>AMM Pool (Uniswap V3 fork)</td><td>Enables 24/7 T+0 redemption without counterparty; concentrated liquidity reduces slippage</td></tr>
+        <tr><td><strong>Cross-chain</strong></td><td>Polygon ↔ Ethereum bridge (Phase 2)</td><td>Institutional clients may require mainnet; bridge enables asset portability</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>4.3 Smart Contract Modules</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Module</th><th>Function</th><th>Key Events</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>GreenYieldToken.sol</code></td><td>ERC-3643 compliant security token; manages mint/burn/transfer with identity checks</td><td>Transfer, Mint, Burn, WhitelistUpdated</td></tr>
+        <tr><td><code>IdentityRegistry.sol</code></td><td>Manages KYC whitelist on-chain; integrates with off-chain AI KYC provider via oracle</td><td>IdentityRegistered, IdentityRevoked</td></tr>
+        <tr><td><code>ESGOracle.sol</code></td><td>Receives Chainlink feed; stores hourly CO₂ reduction and power generation data per project</td><td>ESGDataUpdated, OracleRoundCompleted</td></tr>
+        <tr><td><code>RebaseController.sol</code></td><td>Calculates daily yield based on bond coupon; adjusts total supply; emits push notification trigger</td><td>Rebase, YieldAccrued</td></tr>
+        <tr><td><code>LiquidityPool.sol</code></td><td>AMM pool for T+0 redemption; concentrated liquidity management</td><td>Swap, LiquidityAdded, LiquidityRemoved</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ 5 · COMPLIANCE ══ -->
+<div class="section" id="compliance">
+  <div class="section-label">
+    <div class="section-num">5</div>
+    <div class="section-title">Compliance & Regulatory Framework</div>
+  </div>
+
+  <div class="callout blue">
+    <div class="callout-title">Regulatory Positioning</div>
+    HKGreenYield will enter the market via <strong>HKMA Project Ensemble Sandbox</strong>, which provides a structured regulatory testing environment. Year-2 target: apply for SFC Type 1 (Dealing in Securities) licence to support full retail distribution.
+  </div>
+
+  <h3>5.1 KYC / AML Framework</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Jurisdiction</th><th>KYC Requirement</th><th>Our Implementation</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Hong Kong</td><td>HKMA CDD guidelines; SFC AML notice</td><td>AI face ID + HK ID/passport OCR; ERC-3643 on-chain whitelist; auto-freeze on suspicious activity</td></tr>
+        <tr><td>Mainland China</td><td>Cross-border investment restrictions; SAFE compliance</td><td>GBA users via licensed Hong Kong entity only; no direct CNY on-ramp in Phase 1</td></tr>
+        <tr><td>Institutional</td><td>KYB (Know Your Business) + UBO disclosure</td><td>Manual enhanced due diligence for tickets &gt;USD 10,000; compliance officer sign-off</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>5.2 Token Classification</h3>
+  <ul class="plain">
+    <li>HKGY tokens are classified as <strong>security tokens</strong> (representing fractional ownership in green bonds) under SFC's regulatory framework — not utility tokens or payment tokens</li>
+    <li>ERC-3643 standard legally enforces transfer restrictions: tokens can only be transferred between KYC-verified addresses, satisfying HKMA's investor protection requirements</li>
+    <li>Carbon credit tokens may qualify as <strong>environmental instruments</strong> under SFC's 2025 green product guidelines — providing potential regulatory fast-track</li>
+  </ul>
+
+  <h3>5.3 Data Privacy & Storage</h3>
+  <ul class="plain">
+    <li>Personal KYC data stored off-chain in Hong Kong-domiciled servers (compliant with PDPO)</li>
+    <li>On-chain data limited to: wallet address, token balance, ESG attribution, transaction history — zero PII on-chain</li>
+    <li>ONCHAINID (ERC-3643 identity module) stores cryptographic proof only — not actual identity documents</li>
+  </ul>
+</div>
+
+<!-- ══ 6 · COMPETITIVE ANALYSIS ══ -->
+<div class="section" id="competitive">
+  <div class="section-label">
+    <div class="section-num">6</div>
+    <div class="section-title">Competitive Analysis</div>
+  </div>
+
+  <h3>6.1 Platform Comparison</h3>
+  <div class="compare-grid">
+    <div class="compare-card us">
+      <h4>🏆 HKGreenYield (Us)</h4>
+      <div class="compare-row"><span class="k">Min. Investment</span><span class="v">HKD 100</span></div>
+      <div class="compare-row"><span class="k">Retail-Friendly</span><span class="v">⭐⭐⭐⭐⭐</span></div>
+      <div class="compare-row"><span class="k">On-chain ESG</span><span class="v">Real-time ✅</span></div>
+      <div class="compare-row"><span class="k">Liquidity</span><span class="v">T+0 24/7</span></div>
+      <div class="compare-row"><span class="k">HK Regulated</span><span class="v">Sandbox ✅</span></div>
+    </div>
+    <div class="compare-card">
+      <h4>HSBC Orion</h4>
+      <div class="compare-row"><span class="k">Min. Investment</span><span class="v">USD 5,000+</span></div>
+      <div class="compare-row"><span class="k">Retail-Friendly</span><span class="v">⭐⭐</span></div>
+      <div class="compare-row"><span class="k">On-chain ESG</span><span class="v">Fund tracking only</span></div>
+      <div class="compare-row"><span class="k">Liquidity</span><span class="v">T+2</span></div>
+      <div class="compare-row"><span class="k">HK Regulated</span><span class="v">SFC/FCA ✅</span></div>
+    </div>
+    <div class="compare-card">
+      <h4>DigiFT (Singapore)</h4>
+      <div class="compare-row"><span class="k">Min. Investment</span><span class="v">USD 10,000+</span></div>
+      <div class="compare-row"><span class="k">Retail-Friendly</span><span class="v">⭐⭐</span></div>
+      <div class="compare-row"><span class="k">On-chain ESG</span><span class="v">Certification only</span></div>
+      <div class="compare-row"><span class="k">Liquidity</span><span class="v">Limited</span></div>
+      <div class="compare-row"><span class="k">HK Regulated</span><span class="v">MAS (SG) only</span></div>
+    </div>
+    <div class="compare-card">
+      <h4>Maple Finance</h4>
+      <div class="compare-row"><span class="k">Min. Investment</span><span class="v">USD 1,000+</span></div>
+      <div class="compare-row"><span class="k">Retail-Friendly</span><span class="v">⭐⭐⭐</span></div>
+      <div class="compare-row"><span class="k">On-chain ESG</span><span class="v">None</span></div>
+      <div class="compare-row"><span class="k">Liquidity</span><span class="v">Pool-based</span></div>
+      <div class="compare-row"><span class="k">HK Regulated</span><span class="v">Unregulated</span></div>
+    </div>
+  </div>
+
+  <div class="callout green">
+    <div class="callout-title">Differentiation Summary</div>
+    HKGreenYield is the <strong>only platform</strong> simultaneously satisfying all three: (1) HKMA-compliant regulatory framework, (2) HKD 100 retail entry point, (3) real-time on-chain ESG data verification. HSBC Orion has compliance but no retail access. DigiFT has carbon credits but no HK regulation. Maple Finance has DeFi but no ESG tracking.
+  </div>
+
+  <h3>6.2 SWOT Analysis</h3>
+  <div class="swot-grid">
+    <div class="swot-card swot-s">
+      <h4>✅ Strengths</h4>
+      <ul>
+        <li>Aligned with HKMA policy priorities</li>
+        <li>Clear USP: low barrier + real-time ESG</li>
+        <li>ERC-3643 compliance architecture ahead of market</li>
+        <li>Asset-light model (no balance sheet risk)</li>
+      </ul>
+    </div>
+    <div class="swot-card swot-w">
+      <h4>⚠️ Weaknesses</h4>
+      <ul>
+        <li>Zero brand recognition at launch</li>
+        <li>No institutional relationships or issuers yet</li>
+        <li>Technical team still being assembled</li>
+        <li>Dependent on Project Ensemble sandbox approval</li>
+      </ul>
+    </div>
+    <div class="swot-card swot-o">
+      <h4>🚀 Opportunities</h4>
+      <ul>
+        <li>Project Ensemble reduces regulatory cost significantly</li>
+        <li>HK green finance policy continuously strengthening</li>
+        <li>Asia-Pacific retail ESG awareness rising rapidly</li>
+        <li>SFC greenwashing crackdown creates demand for our model</li>
+      </ul>
+    </div>
+    <div class="swot-card swot-t">
+      <h4>🔴 Threats</h4>
+      <ul>
+        <li>Large banks can clone the product quickly</li>
+        <li>Carbon credit "greenwashing" regulatory tightening</li>
+        <li>Crypto market sentiment volatility affects trust</li>
+        <li>Sandbox rejection or delayed approval</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 7 · METRICS & ROADMAP ══ -->
+<div class="section" id="metrics">
+  <div class="section-label">
+    <div class="section-num">7</div>
+    <div class="section-title">Success Metrics & Product Roadmap</div>
+  </div>
+
+  <h3>7.1 North Star Metric & KPI Framework</h3>
+  <div class="callout green">
+    <div class="callout-title">North Star Metric</div>
+    <strong>TVL (Total Value Locked)</strong> — reflects both user trust and investment scale. Secondary metrics: MAU, average investment per user, D30 user retention rate, KYC conversion rate.
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Metric</th><th>MVP Target (Q3 2027)</th><th>Year 1 (End 2027)</th><th>Year 3 (2029)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>TVL</strong></td><td>USD 100K</td><td>USD 1M</td><td>USD 10M+</td></tr>
+        <tr><td><strong>Registered Users</strong></td><td>500</td><td>5,000</td><td>50,000</td></tr>
+        <tr><td><strong>KYC Conversion Rate</strong></td><td>&gt;60%</td><td>&gt;70%</td><td>&gt;75%</td></tr>
+        <tr><td><strong>D30 Retention</strong></td><td>&gt;40%</td><td>&gt;50%</td><td>&gt;60%</td></tr>
+        <tr><td><strong>Average Investment / User</strong></td><td>HKD 500</td><td>HKD 1,000</td><td>HKD 3,000</td></tr>
+        <tr><td><strong>Revenue Run-Rate</strong></td><td>—</td><td>USD 20K / year</td><td>USD 200K / year</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>7.2 Business Model</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Revenue Stream</th><th>Rate</th><th>Target Customer</th><th>Phase</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Management Fee</td><td>0.8% / year on AUM</td><td>All token holders</td><td>Phase 1</td></tr>
+        <tr><td>Subscription / Redemption Fee</td><td>0.5% per transaction</td><td>All users</td><td>Phase 1</td></tr>
+        <tr><td>B2B White-label API</td><td>Negotiated SaaS / revenue share</td><td>Banks, funds, ESG platforms</td><td>Phase 2</td></tr>
+        <tr><td>Carbon Credit Aggregation Fee</td><td>1% of carbon credit transaction value</td><td>Corporate buyers</td><td>Phase 2</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>7.3 Product Roadmap</h3>
+  <div class="roadmap">
+    <div class="roadmap-phase">
+      <div class="phase-tag active">Phase 1<br/>Q1–Q3 2027</div>
+      <div class="phase-content">
+        <h4>MVP Launch — HKMA Project Ensemble Sandbox</h4>
+        <p>Retail app (iOS + Android), ERC-3643 KYC, token purchase/mint, ESG dashboard (Chainlink Oracle), auto-Rebase yield, T+0 redemption pool. 3 green bond projects onboarded.</p>
+      </div>
+    </div>
+    <div class="roadmap-phase">
+      <div class="phase-tag">Phase 2<br/>Q4 2027–Q2 2028</div>
+      <div class="phase-content">
+        <h4>Growth — Institutional & B2B</h4>
+        <p>NFT carbon certificates, referral system, B2B white-label API launch, institutional investor module (KYB, large ticket support). Apply for SFC Type 1 licence.</p>
+      </div>
+    </div>
+    <div class="roadmap-phase">
+      <div class="phase-tag">Phase 3<br/>2028–2029</div>
+      <div class="phase-content">
+        <h4>Scale — GBA Expansion & Secondary Market</h4>
+        <p>Cross-chain bridge to Ethereum mainnet, DEX order book for secondary trading, expand to Singapore and Taiwan markets. Carbon credit aggregation marketplace.</p>
+      </div>
+    </div>
+    <div class="roadmap-phase">
+      <div class="phase-tag">Phase 4<br/>2030+</div>
+      <div class="phase-content">
+        <h4>Ecosystem — RWA Infrastructure</h4>
+        <p>Position HKGreenYield as Hong Kong's leading green RWA infrastructure. TVL target USD 10M+. Explore HKMA retail digital asset licence application.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 8 · RISKS ══ -->
+<div class="section" id="risks">
+  <div class="section-label">
+    <div class="section-num">8</div>
+    <div class="section-title">Risk Assessment & Mitigations</div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Risk</th><th>Category</th><th>Likelihood</th><th>Impact</th><th>Mitigation</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>HKMA sandbox application rejected or delayed</td>
+          <td>Regulatory</td>
+          <td><span class="tag tag-p1">Medium</span></td>
+          <td><span class="tag tag-p0">High</span></td>
+          <td>Engage HKMA early; position as Project Ensemble showcase; Singapore MAS as backup market</td>
+        </tr>
+        <tr>
+          <td>Large banks clone the product</td>
+          <td>Competitive</td>
+          <td><span class="tag tag-p1">Medium</span></td>
+          <td><span class="tag tag-p1">Medium</span></td>
+          <td>First-mover brand in retail green RWA; community-driven growth; build switching costs via ESG NFT history</td>
+        </tr>
+        <tr>
+          <td>Smart contract vulnerability / hack</td>
+          <td>Technical</td>
+          <td><span class="tag tag-p2">Low</span></td>
+          <td><span class="tag tag-p0">Critical</span></td>
+          <td>3rd-party security audit (CertiK/Quantstamp) before launch; bug bounty programme; insurance cover</td>
+        </tr>
+        <tr>
+          <td>Chainlink Oracle data manipulation</td>
+          <td>Technical</td>
+          <td><span class="tag tag-p2">Very Low</span></td>
+          <td><span class="tag tag-p1">Medium</span></td>
+          <td>Chainlink's decentralised oracle network; secondary IoT data source cross-validation</td>
+        </tr>
+        <tr>
+          <td>Carbon credit greenwashing tightening</td>
+          <td>Regulatory</td>
+          <td><span class="tag tag-p1">Medium</span></td>
+          <td><span class="tag tag-p1">Medium</span></td>
+          <td>Our on-chain real-time verification model is the solution, not the problem; position as compliance enabler</td>
+        </tr>
+        <tr>
+          <td>Liquidity pool insufficient (T+0 fails)</td>
+          <td>Operational</td>
+          <td><span class="tag tag-p1">Medium</span></td>
+          <td><span class="tag tag-p0">High</span></td>
+          <td>Seed liquidity with institutional LP; circuit breaker mechanism; clear user disclosure on AMM slippage</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<!-- ══ FOOTER ══ -->
+<div class="doc-footer">
+  <div class="left">
+    <div class="name">张艺馨 · Yixin Zhang</div>
+    <div class="sub">CUHK MSc SEEM 2027 · FinTech Product Manager · Hong Kong</div>
+    <div class="sub" style="margin-top:4px">15940749137@163.com</div>
+  </div>
+  <div class="links">
+    <a href="https://github.com/itsiriszhang-png/TRAE-D-SME-Pricing" target="_blank">GitHub: SME Pricing System</a>
+    <a href="https://trae-d-sme-pricing-ytpfbuvdfijqgbkg6ggwnh.streamlit.app" target="_blank">Live Demo</a>
+    <a href="#" target="_blank">HKGreenYield PRD v2.0</a>
+  </div>
+</div>
+
+</body>
+</html>
