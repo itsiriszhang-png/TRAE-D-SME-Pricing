@@ -184,7 +184,10 @@ run = st.sidebar.button("Run Assessment", use_container_width=True)
 if "history" not in st.session_state:
     st.session_state.history = []
 
-if run or "result" not in st.session_state:
+input_signature = (profile, scenario, macro, noise_toggle, int(noise_seed))
+input_changed = st.session_state.get("last_input_signature") != input_signature
+
+if run or "result" not in st.session_state or input_changed:
     base_result = run_trae_for_sme(profile, scenario)
     if "error" in base_result:
         st.error(base_result["error"])
@@ -225,6 +228,7 @@ if run or "result" not in st.session_state:
     }
 
     st.session_state.result = result
+    st.session_state.last_input_signature = input_signature
     st.session_state.history.append(
         {
             "time": datetime.now().strftime("%H:%M:%S"),
